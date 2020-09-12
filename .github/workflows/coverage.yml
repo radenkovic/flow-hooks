@@ -21,14 +21,14 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      - name: Checkout to master
+        uses: actions/checkout@master
+
       - name: Install dependencies
         run: yarn install
 
       - name: Build and upload coverage report
         run: yarn coverage
-        
-      - name: Checkout to master
-        uses: actions/checkout@master
       
       - name: Upload coverage
         uses: codecov/codecov-action@v1
