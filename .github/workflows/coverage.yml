@@ -24,8 +24,8 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
-      - name: Create coverage report
-        run: yarn test --coverage
+      - name: Build and upload coverage report
+        run: yarn coverage
         
       - name: Checkout to master
         uses: actions/checkout@master

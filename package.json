@@ -26,7 +26,8 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "jest",
-    "lint": "eslint --ext .js --config .eslintrc.js lib/** test/**"
+    "lint": "eslint --ext .js --config .eslintrc.js lib/** test/**",
+    "coverage": "jest --ci --coverage && codecov"
   },
   "engines": {
     "node": ">= 10.0.0",
@@ -39,6 +40,7 @@
     "bluebird": "^3.7.2"
   },
   "devDependencies": {
+    "codecov": "^3.7.2",
     "eslint": "^7.8.1",
     "eslint-config-prettier": "^6.11.0",
     "eslint-import-resolver-node": "^0.3.4",
