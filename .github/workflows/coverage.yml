@@ -1,4 +1,4 @@
-name: Codecov Report
+name: codecov-report
 
 on:
   push:
