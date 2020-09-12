@@ -1,0 +1,36 @@
+name: Codecov Report
+
+on: 
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.x]
+
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Create coverage report
+        run: yarn test --coverage
+        
+      - name: Checkout to master
+        uses: actions/checkout@master
+      - uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./clover.xml # optional
+          name: flow-control # optional
+          fail_ci_if_error: true # optional (default = false)
+
