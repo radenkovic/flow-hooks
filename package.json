@@ -25,7 +25,8 @@
   "homepage": "https://github.com/radenkovic/flow-control",
   "main": "lib/index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint --ext .js --config .eslintrc.js lib/** test/**"
   },
   "engines": {
     "node": ">= 10.0.0",
