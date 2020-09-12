@@ -1,8 +1,6 @@
 name: Codecov Report
 
 on:
-  # Trigger the workflow on push or pull request,
-  # but only for the master branch
   push:
     branches:
       - master
@@ -23,12 +21,17 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      - name: Install dependencies
+        run: yarn install
+
       - name: Create coverage report
         run: yarn test --coverage
         
       - name: Checkout to master
         uses: actions/checkout@master
-      - uses: codecov/codecov-action@v1
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./clover.xml # optional
