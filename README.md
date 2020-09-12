@@ -10,3 +10,8 @@ Supports [ramda](https://ramdajs.com/) and [lodash/fp](https://github.com/lodash
 # Quickstart
 
 - `yarn add flow-hooks`
+
+
+# NPM
+
+`git commit --allow-empty -m "Release 1.0.1"`
