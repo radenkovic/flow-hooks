@@ -34,7 +34,7 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./clover.xml # optional
+          file: ./coverage/clover.xml # optional
           name: flow-control # optional
           fail_ci_if_error: true # optional (default = false)
 
