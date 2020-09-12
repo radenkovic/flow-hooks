@@ -59,10 +59,8 @@ it('override whole context on the last hook', async () => {
       return { override: true };
     },
   ]);
-  expect(result).toBeDefined();
-  // TODO: fix this scenario
-  // expect(result).toHaveProperty('override', true);
-  // expect(result).not.toHaveProperty('a');
+  expect(result).toHaveProperty('override', true);
+  expect(result).not.toHaveProperty('a');
 });
 
 it('Stop flow on exception', async () => {

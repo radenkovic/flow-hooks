@@ -31,10 +31,7 @@ it('When works as last hook', async () => {
       },
     ]),
   ]);
-
-  expect(result).toHaveProperty('a', 'ok');
-  // TODO: fix scenario
-  // expect(result).toHaveProperty('b', 'ok');
+  expect(result).toHaveProperty('b', 'ok');
 });
 
 it('When() skips on falsy condition', async () => {
