@@ -1,5 +1,5 @@
 {
-  "name": "hook-flow",
+  "name": "flow-hooks",
   "version": "1.0.0",
   "author": "Dan Radenkovic",
   "maintainers": [
@@ -15,14 +15,15 @@
     "flow control",
     "javascript",
     "node",
+    "hooks",
     "es6",
     "async",
     "flow"
   ],
   "bugs": {
-    "web": "https://github.com/radenkovic/flow-control/issues"
+    "web": "https://github.com/radenkovic/flow-hooks/issues"
   },
-  "homepage": "https://github.com/radenkovic/flow-control",
+  "homepage": "https://github.com/radenkovic/flow-hooks",
   "main": "lib/index.js",
   "scripts": {
     "test": "jest",
