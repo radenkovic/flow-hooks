@@ -1,6 +1,7 @@
 # Flow Hooks
 
-![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/radenkovic/flow-hooks/run-tests)
+[![npm](https://img.shields.io/npm/v/flow-hooks)](https://www.npmjs.com/package/flow-hooks)
+[![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/radenkovic/flow-hooks/run-tests)](https://github.com/radenkovic/flow-hooks/actions?query=workflow%3Arun-tests)
 [![codecov](https://codecov.io/gh/radenkovic/flow-hooks/branch/master/graph/badge.svg)](https://codecov.io/gh/radenkovic/flow-hooks)
 ![david](https://david-dm.org/radenkovic/flow-hooks.svg)
 
