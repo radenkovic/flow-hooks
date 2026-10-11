@@ -13,7 +13,8 @@
     "isolatedDeclarations": true,
     "declaration": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": { "flow-hooks": ["./src/index.ts"] }
   },
-  "include": ["src", "test", "*.config.ts"]
+  "include": ["src", "test", "examples", "*.config.ts"]
 }

@@ -1,6 +1,13 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig, type ViteUserConfig } from 'vitest/config';
 
 const config: ViteUserConfig = defineConfig({
+  resolve: {
+    // Examples import 'flow-hooks' like users do; point it at the source.
+    alias: {
+      'flow-hooks': fileURLToPath(new URL('src/index.ts', import.meta.url)),
+    },
+  },
   test: {
     include: ['test/**/*.test.ts'],
     typecheck: {

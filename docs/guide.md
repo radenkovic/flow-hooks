@@ -1,5 +1,7 @@
 # Core concepts
 
+This page is the precise version of [Getting started](getting-started.md): what the context is, what hooks may return, and how flows stop. For copy-paste solutions see [Recipes](recipes.md); for pitfalls see [Common mistakes](mistakes.md).
+
 ## Hooks
 
 A hook is a function that receives the current context and an `api` object, and returns the next context. It can be sync or async.
@@ -98,11 +100,11 @@ const page = await flow(renderHooks, user); // no copy; `user` is already frozen
 
 There are three ways for a flow to stop before the last hook:
 
-| How                                     | `flow()` result              | Use it for                  |
-| --------------------------------------- | ---------------------------- | --------------------------- |
-| `cancel()` or `throw new CancelError()` | resolves with the context    | "nothing more to do"        |
-| `cancel(error)` or `throw error`        | rejects with `error`         | failures, validation errors |
-| `options.signal` aborted                | rejects with `signal.reason` | timeouts, user cancellation |
+| How                                     | `flow()` result           | Use it for                  |
+| --------------------------------------- | ------------------------- | --------------------------- |
+| `cancel()` or `throw new CancelError()` | resolves with the context | "nothing more to do"        |
+| `cancel(error)` or `throw error`        | rejects with `error`      | failures, validation errors |
+| `options.signal` aborted                | rejects (see below)       | timeouts, user cancellation |
 
 ### Cancelling
 
@@ -155,6 +157,18 @@ await flow(
   { query },
   { signal: controller.signal },
 );
+```
+
+If the signal is aborted between hooks, the flow rejects with `signal.reason`. If it's aborted while a hook is running, the flow rejects with whatever that hook throws: `fetch` throws `signal.reason`, but other APIs throw their own `AbortError`. To check for an abort, test `signal.aborted` rather than the error:
+
+```ts
+const deadline = AbortSignal.timeout(5_000);
+try {
+  await flow(hooks, ctx, { signal: deadline });
+} catch (error) {
+  if (deadline.aborted) return showTimeoutMessage();
+  throw error;
+}
 ```
 
 ## Branching and parallel steps

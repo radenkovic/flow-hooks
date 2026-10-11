@@ -17,7 +17,7 @@ Runs `hooks` in order and resolves with the final context. Each hook receives th
 - **Resolves** with the final frozen context, or with the context at the moment of a cancel.
 - **Rejects** with:
   - the error a hook threw;
-  - `signal.reason`, if the flow was aborted;
+  - `signal.reason`, if the flow was aborted between hooks (if it's aborted while a hook runs, the error that hook throws);
   - a `TypeError`, if the input is invalid or a hook returns something other than a plain object or `undefined`.
 
 ```ts

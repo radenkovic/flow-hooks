@@ -9,91 +9,65 @@
 [![bundle size](https://img.shields.io/bundlejs/size/flow-hooks)](https://bundlejs.com/?q=flow-hooks)
 [![license](https://img.shields.io/npm/l/flow-hooks)](https://github.com/radenkovic/flow-hooks/blob/master/LICENSE)
 
-flow-hooks lets you write async logic as a list of small, named steps instead of one long function. Each step (a **hook**) receives an immutable **context** and returns the next one, like a reducer. Steps can run conditionally or in parallel, and the flow can stop early, with or without an error.
+flow-hooks lets you write async logic as **a list of small steps** instead of one long function. Each step (a **hook**) receives a frozen **context** object and returns the next one, like a reducer.
 
-```ts
-import { cancel, every, flow, when } from 'flow-hooks';
+```js
+import { cancel, flow, when } from 'flow-hooks';
 
 const checkout = [
-  validateCart,
-  when((ctx) => ctx.cart.items.length === 0, cancel()),
-  every([reserveStock, calculateShipping]),
-  chargeCard,
-  sendConfirmation,
+  when((ctx) => ctx.items.length === 0, cancel()), // stop early
+  (ctx) => ({ ...ctx, total: ctx.items.reduce((sum, i) => sum + i.price, 0) }),
+  when(
+    (ctx) => ctx.coupon === 'SAVE10',
+    (ctx) => ({ ...ctx, total: ctx.total * 0.9 }),
+  ),
+  (ctx) => {
+    console.log(`Charging $${ctx.total}`); // side effect: return nothing
+  },
 ];
 
-const order = await flow(checkout, { cart, user });
+const order = await flow(checkout, {
+  items: [{ price: 60 }, { price: 40 }],
+  coupon: 'SAVE10',
+});
+// Charging $90
+
+order.total; // 90
 ```
 
-## Features
+## Where it fits
 
-- **Immutable by default:** every step gets a frozen context and returns a new one, so no step can change data behind another's back.
-- **Small API:** `flow`, `when`, `any`, `every` and `cancel` cover most control flow.
-- **Reusable steps:** hooks are plain functions, so you can share, wrap and test them on their own.
-- **Parallel steps:** `any()` (first to succeed) and `every()` (all of them) start their hooks together.
-- **Early exit:** cancel a flow without throwing, and still get the context back.
-- **Abortable:** a single `AbortSignal` reaches every hook, which makes timeouts and user cancellation simple.
-- **Typed:** written in TypeScript. The context is deeply readonly, so mutations are compile errors.
-- **Lightweight:** no runtime dependencies. Ships ESM and CommonJS, and runs in Node.js 22+ and modern browsers.
+Anywhere a process is a series of async steps with branches, parallel work and early exits:
 
-## When to use it
-
-flow-hooks fits anywhere a process is a series of async steps with branches and early exits:
-
-- **Request handlers and API endpoints:** parse, authenticate, validate, load, respond.
-- **Business workflows:** checkout, sign-up, onboarding, order fulfilment.
-- **Data loading:** fetch from several sources in parallel, with fallbacks and timeouts.
+- **Request handlers:** authenticate, validate, load, respond.
+- **Business workflows:** checkout, sign-up, onboarding, fulfilment.
+- **Data loading:** several sources in parallel, with fallbacks and timeouts.
 - **Background jobs and webhooks:** skip duplicates, retry flaky calls, stop cleanly on shutdown.
-- **CLI tools and scripts:** readable, testable pipelines instead of one long `main()`.
 
-Because every step is a pure-ish function from context to context, each one can be unit-tested on its own with a plain object.
+What you get over one long `async` function:
 
-## Installation
+- **You can read the process at a glance.** The flow is a list of named steps.
+- **Each step is easy to test.** A hook is a plain function: call it with an object and check the result.
+- **Steps can't interfere.** The context is frozen, so no step can change data another one is holding.
+- **Cancellation reaches everything.** One `AbortSignal` goes to every hook, and leftover parallel work is aborted.
+
+## Install
 
 ```bash
 npm install flow-hooks
 ```
 
-```ts
-// ESM / TypeScript
-import { flow, when, any, every, cancel } from 'flow-hooks';
-
-// CommonJS
-const { flow, when, any, every, cancel } = require('flow-hooks');
+```js
+import { flow, when, any, every, cancel } from 'flow-hooks'; // ESM / TypeScript
+const { flow, when, any, every, cancel } = require('flow-hooks'); // CommonJS
 ```
 
-## Quick start
+Typed, no runtime dependencies, Node.js 22+ and modern browsers.
 
-```ts
-import { flow, when } from 'flow-hooks';
+## Where to go next
 
-const greeting = await flow(
-  [
-    (ctx) => ({ ...ctx, name: ctx.name.trim() }),
-    when(
-      (ctx) => ctx.name === '',
-      (ctx) => ({ ...ctx, name: 'stranger' }),
-    ),
-    (ctx) => ({ ...ctx, message: `Hello, ${ctx.name}!` }),
-  ],
-  { name: '  ' },
-);
-
-greeting.message; // 'Hello, stranger!'
-Object.isFrozen(greeting); // true
-```
-
-Every hook is just `(ctx, api) => nextCtx`, so a flow is an array you can build, spread and reuse:
-
-```ts
-const authenticate = [readSession, loadUser, requireRole('admin')];
-
-await flow([...authenticate, deleteProject], { req });
-```
-
-## Next steps
-
-- [Core concepts](guide.md): how the context, return values, errors and cancellation work.
-- [API reference](api.md): every function and type.
-- [Recipes](recipes.md): retries, timeouts, caching, fallbacks, HTTP handlers and more.
-- [TypeScript](typescript.md): typing your context.
+- **New here?** [Getting started](getting-started.md) teaches the whole library in nine short, runnable steps.
+- **Want to see real code?** [Examples](examples.md) are complete programs: an HTTP handler, a webhook worker, parallel loading, retries and tests.
+- **Solving a specific problem?** [Recipes](recipes.md) has retries, timeouts, fallbacks, if/else, caching, logging, Express and React.
+- **Something not working?** [Common mistakes](mistakes.md) lists the errors you're most likely to see.
+- **Need the details?** [Core concepts](guide.md), [API](api.md) and [TypeScript](typescript.md).

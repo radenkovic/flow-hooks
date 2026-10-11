@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Documentation
+
+- New [Getting started](https://radenkovic.github.io/flow-hooks/#/getting-started) tutorial, [Examples](https://radenkovic.github.io/flow-hooks/#/examples) and [Common mistakes](https://radenkovic.github.io/flow-hooks/#/mistakes) pages, and reorganised Recipes.
+- Runnable examples in `examples/`, checked by the test suite.
+
 ## 2.0.0
 
 Rewritten in TypeScript around an **immutable, reducer-style context**. There are no runtime dependencies (`bluebird` was removed), and the package ships ESM, CommonJS and type declarations.

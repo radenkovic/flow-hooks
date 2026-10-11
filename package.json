@@ -59,6 +59,7 @@
   "scripts": {
     "build": "tsdown",
     "check": "npm run lint && npm run typecheck && npm run test:coverage && npm run build && npm run check:package",
+    "example": "npm run build --silent && node",
     "check:package": "publint --strict && attw --pack . --profile node16",
     "format": "prettier --write .",
     "lint": "eslint . && prettier --check .",
