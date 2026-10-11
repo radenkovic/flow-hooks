@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://radenkovic.github.io/flow-hooks/sitemap.xml

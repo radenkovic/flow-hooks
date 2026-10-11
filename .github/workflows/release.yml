@@ -1,0 +1,41 @@
+name: Release
+
+# Publishes to npm when a version tag is pushed:
+#   npm version <major|minor|patch> && git push --follow-tags
+#
+# Uses npm trusted publishing (OIDC), so no npm token is stored in the repo.
+# One-time setup on npmjs.com: package settings → Trusted publishing → GitHub
+# Actions, repository radenkovic/flow-hooks, workflow release.yml.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - name: Check tag matches package.json version
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $version"
+            exit 1
+          fi
+      - run: npm ci
+      - run: npm run check
+      - run: npm publish --provenance --access public
+      - name: Create GitHub release
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag
+        env:
+          GH_TOKEN: ${{ github.token }}

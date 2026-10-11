@@ -2,20 +2,82 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>flow-hooks - Flow control utilities for javascript on web and node</title>
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-  <meta name="description" content="Flow control utilities for javascript on web and node">
-  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
+  <title>flow-hooks: composable async flows from small, immutable steps</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="flow-hooks is a tiny TypeScript library for building async flows from small, immutable, reducer-style steps: sequence, branch, race and run in parallel, with cancellation and AbortSignal support. Zero dependencies.">
+  <meta name="theme-color" content="#42b983">
+  <link rel="canonical" href="https://radenkovic.github.io/flow-hooks/">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2342b983'/%3E%3Cpath d='M9 8h14M9 16h10M9 24h6' stroke='white' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="flow-hooks">
+  <meta property="og:title" content="flow-hooks: composable async flows from small, immutable steps">
+  <meta property="og:description" content="Sequence, branch, race and run async steps in parallel, with cancellation and AbortSignal support. TypeScript, zero dependencies.">
+  <meta property="og:url" content="https://radenkovic.github.io/flow-hooks/">
+  <meta property="og:image" content="https://radenkovic.github.io/flow-hooks/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="flow-hooks: composable async flows from small, immutable steps">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="flow-hooks: composable async flows from small, immutable steps">
+  <meta name="twitter:description" content="Sequence, branch, race and run async steps in parallel, with cancellation and AbortSignal support. TypeScript, zero dependencies.">
+  <meta name="twitter:image" content="https://radenkovic.github.io/flow-hooks/og.png">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareSourceCode",
+      "name": "flow-hooks",
+      "description": "Composable async flows built from small, immutable steps: sequence, branch, race and run in parallel, with cancellation and AbortSignal support.",
+      "url": "https://radenkovic.github.io/flow-hooks/",
+      "codeRepository": "https://github.com/radenkovic/flow-hooks",
+      "programmingLanguage": ["TypeScript", "JavaScript"],
+      "runtimePlatform": "Node.js",
+      "license": "https://opensource.org/licenses/MIT",
+      "author": { "@type": "Person", "name": "Dan Radenkovic", "url": "https://github.com/radenkovic" }
+    }
+  </script>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/themes/vue.css">
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app">
+    <noscript>
+      <h1>flow-hooks</h1>
+      <p>Composable async flows built from small, immutable steps. See the <a href="https://github.com/radenkovic/flow-hooks#readme">README on GitHub</a>.</p>
+    </noscript>
+  </div>
   <script>
     window.$docsify = {
       name: 'flow-hooks',
-      repo: ''
+      repo: 'radenkovic/flow-hooks',
+      loadSidebar: true,
+      subMaxLevel: 2,
+      auto2top: true,
+      search: {
+        placeholder: 'Search',
+        noData: 'No results',
+        depth: 3
+      },
+      plugins: [
+        // docsify replaces <title> with the sidebar label; keep it descriptive.
+        function (hook, vm) {
+          var homeTitle = document.title;
+          hook.doneEach(function () {
+            var heading = document.querySelector('.markdown-section h1');
+            var isHome = vm.route.path === '/';
+            document.title = isHome || !heading
+              ? homeTitle
+              : heading.textContent.trim() + ' · flow-hooks';
+          });
+        }
+      ]
     }
   </script>
-  <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/docsify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/plugins/search.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code@2.1.1/dist/docsify-copy-code.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-typescript.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-bash.min.js"></script>
 </body>
 </html>
