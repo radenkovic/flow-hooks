@@ -1,5 +1,9 @@
 - [Introduction](/)
-- [Core concepts](guide.md)
-- [API reference](api.md)
+- [Getting started](getting-started.md)
+- [Examples](examples.md)
 - [Recipes](recipes.md)
-- [TypeScript](typescript.md)
+- [Common mistakes](mistakes.md)
+- Reference
+  - [Core concepts](guide.md)
+  - [API](api.md)
+  - [TypeScript](typescript.md)

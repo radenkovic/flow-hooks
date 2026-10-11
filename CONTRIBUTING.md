@@ -25,6 +25,7 @@ It lints, type-checks, runs the tests with a 100% coverage threshold, builds the
 
 - Add or update tests for any behaviour change. Type-level behaviour is tested in `test/types.test-d.ts`.
 - Update the docs in `docs/` and the README if the public API changes.
+- Examples in `examples/` are run by the test suite, which checks that each one prints the output in its closing `/* Output: */` comment. Run one by hand with `npm run example examples/01-basics.ts`.
 - Add a line to `CHANGELOG.md` under an "Unreleased" heading.
 
 ## Docs site

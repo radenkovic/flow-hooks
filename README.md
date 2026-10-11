@@ -9,189 +9,112 @@
 
 > Composable async flows built from small, immutable steps: sequence, branch, race and run in parallel, with cancellation built in.
 
-Write async logic as a list of small steps instead of one long function. Each step (a **hook**) receives an immutable **context** and returns the next one, like a reducer. Steps can run conditionally or in parallel, and the flow can stop early, with or without an error.
-
-**[Documentation](https://radenkovic.github.io/flow-hooks/)** · [Core concepts](https://radenkovic.github.io/flow-hooks/#/guide) · [API](https://radenkovic.github.io/flow-hooks/#/api) · [Recipes](https://radenkovic.github.io/flow-hooks/#/recipes)
-
-## Features
-
-- **Immutable by default:** every step gets a frozen context and returns a new one, so no step can change data behind another's back.
-- **Small API:** `flow`, `when`, `any`, `every` and `cancel` cover most control flow.
-- **Reusable steps:** hooks are plain functions, so you can share, wrap and test them on their own.
-- **Parallel steps:** `any()` (first to succeed) and `every()` (all of them) start their hooks together.
-- **Early exit:** cancel a flow without throwing, and still get the context back.
-- **Abortable:** a single `AbortSignal` reaches every hook, which makes timeouts and user cancellation simple.
-- **Typed:** written in TypeScript. The context is deeply readonly, so mutations are compile errors.
-- **Lightweight:** no runtime dependencies. Ships ESM and CommonJS, and runs in Node.js 22+ and modern browsers.
-
-## When to use it
-
-flow-hooks fits anywhere a process is a series of async steps with branches and early exits:
-
-- **Request handlers and API endpoints:** parse, authenticate, validate, load, respond.
-- **Business workflows:** checkout, sign-up, onboarding, order fulfilment.
-- **Data loading:** fetch from several sources in parallel, with fallbacks and timeouts.
-- **Background jobs and webhooks:** skip duplicates, retry flaky calls, stop cleanly on shutdown.
-- **CLI tools and scripts:** readable, testable pipelines instead of one long `main()`.
-
-Because every step is a pure-ish function from context to context, each one can be unit-tested on its own with a plain object.
-
-## Installation
+Write async logic as **a list of small steps** instead of one long function. Each step (a **hook**) receives a frozen **context** object and returns the next one, like a reducer.
 
 ```sh
 npm install flow-hooks
 ```
 
-```ts
-import { flow, when, any, every, cancel } from 'flow-hooks'; // ESM / TypeScript
-const { flow, when, any, every, cancel } = require('flow-hooks'); // CommonJS
-```
-
 ## Example
 
-```ts
-import { any, cancel, every, flow, when } from 'flow-hooks';
+```js
+import { cancel, flow, when } from 'flow-hooks';
 
-const order = await flow(
-  [
-    // Return the next context.
-    (ctx) => ({
-      ...ctx,
-      total: ctx.items.reduce((sum, item) => sum + item.price, 0),
-    }),
+const checkout = [
+  // Stop early, without an error, when there's nothing to do.
+  when((ctx) => ctx.items.length === 0, cancel()),
 
-    // Stop quietly when there's nothing to do; flow() still resolves.
-    when((ctx) => ctx.items.length === 0, cancel()),
+  // Each step returns the next context.
+  (ctx) => ({ ...ctx, total: ctx.items.reduce((sum, i) => sum + i.price, 0) }),
 
-    // Run in parallel and wait for all of them. Their changes are merged.
-    every([
-      async (ctx, { signal }) => ({
-        ...ctx,
-        stock: await reserveStock(ctx.items, { signal }),
-      }),
-      async (ctx, { signal }) => ({
-        ...ctx,
-        shipping: await quoteShipping(ctx.address, { signal }),
-      }),
-    ]),
+  // Only runs when the condition is true.
+  when(
+    (ctx) => ctx.coupon === 'SAVE10',
+    (ctx) => ({ ...ctx, total: ctx.total * 0.9 }),
+  ),
 
-    // Run in parallel and continue with the first one that succeeds.
-    any([chargeWithStripe, chargeWithPaypal]),
+  // Return nothing for side effects. The context passes through unchanged.
+  (ctx) => {
+    console.log(`Charging $${ctx.total}`);
+  },
+];
 
-    // Fail the flow with a specific error.
-    when((ctx) => !ctx.paymentId, cancel(new Error('Payment failed'))),
+const order = await flow(checkout, {
+  items: [{ price: 60 }, { price: 40 }],
+  coupon: 'SAVE10',
+});
+// Charging $90
 
-    // Side-effect only: return nothing to keep the context as it is.
-    async (ctx) => {
-      await sendConfirmation(ctx);
-    },
-  ],
-  { items, address },
-  { signal: AbortSignal.timeout(10_000) }, // abort the whole flow after 10s
-);
+order.total; // 90
 ```
 
-## How it works
+## Why
 
-A hook is `(ctx, api) => nextCtx`, sync or async.
+Compare one long function:
 
-- **`ctx` is frozen.** Plain objects and arrays inside it are frozen too, so a mutation throws a `TypeError`.
-- **Return a new context** (`{ ...ctx, key: value }`) to pass data to the next hook.
-- **Return `undefined`** (nothing) to keep the context unchanged, for side-effect steps like logging or sending an email.
-- Returning anything else (a number, an array, a class instance) is a bug, and the flow rejects with a `TypeError` that names the hook.
-- **Throw** (or `cancel(error)`) to fail the flow. **`cancel()`** stops it without failing.
-- **`api.signal`** is an `AbortSignal`. Pass it to `fetch()` and other abortable work.
+```js
+async function checkout(cart, user) {
+  if (cart.items.length === 0) return;
+  const total = sum(cart.items);
+  const [stock, shipping] = await Promise.all([
+    reserveStock(cart),
+    quoteShipping(user),
+  ]);
+  let payment;
+  try {
+    payment = await chargeWithStripe(user, total);
+  } catch {
+    payment = await chargeWithPaypal(user, total);
+  }
+  await sendConfirmation(user, payment);
+}
+```
 
-The object you pass as the initial context is copied, never frozen or changed. Class instances (`Date`, `Map`, a request or a DB client) are kept by reference and not frozen. Read more in [Core concepts](https://radenkovic.github.io/flow-hooks/#/guide).
+with the same process as a flow:
+
+```js
+const checkout = [
+  when((ctx) => ctx.cart.items.length === 0, cancel()),
+  addTotal,
+  every([reserveStock, quoteShipping]), // in parallel
+  any([chargeWithStripe, chargeWithPaypal]), // first one to succeed
+  sendConfirmation,
+];
+
+await flow(checkout, { cart, user }, { signal: AbortSignal.timeout(10_000) });
+```
+
+- **You can read the process at a glance.** Each line is one step; the details live in small, named functions.
+- **Each step is easy to test.** A hook is a plain function: call it with an object and check what it returns.
+- **Steps can't interfere.** The context is frozen, so no step can change data another step, a parallel step or the caller is holding.
+- **Cancellation reaches everything.** One `AbortSignal` goes to every hook. When `every()` fails or `any()` has a winner, the leftover work is aborted.
+
+For a three-line function you don't need any of this. It pays off once a process has branches, parallel work, early exits and retries.
 
 ## API
 
-| Function                                    | Description                                                               |
-| ------------------------------------------- | ------------------------------------------------------------------------- |
-| `flow(hooks, initialContext?, options?)`    | Run hooks in order. Resolves with the final (frozen) context.             |
-| `runFlow(hooks, initialContext?, options?)` | Like `flow()`, but resolves with `{ context, cancelled }`.                |
-| `when(condition, hook \| hooks[])`          | Run hooks only if `condition(ctx)` is truthy.                             |
-| `any(hooks[])`                              | Start all hooks; continue with the first to succeed, abort the rest.      |
-| `every(hooks[])`                            | Start all hooks; wait for all of them and merge the contexts they return. |
-| `cancel(error?)`                            | Stop the flow. With an error, the flow rejects with it.                   |
-| `CancelError`, `isCancelError(error)`       | Throw or detect a cancel from your own code.                              |
+| Function                                | What it does                                                    |
+| --------------------------------------- | --------------------------------------------------------------- |
+| `flow(hooks, context?, { signal? })`    | Runs hooks in order. Resolves with the final, frozen context.   |
+| `runFlow(hooks, context?, { signal? })` | Same, but resolves with `{ context, cancelled }`.               |
+| `when(condition, hook \| hooks[])`      | Runs the hook(s) only if `condition(ctx)` is truthy.            |
+| `every(hooks[])`                        | Runs hooks in parallel, waits for all and merges their results. |
+| `any(hooks[])`                          | Runs hooks in parallel and continues with the first to succeed. |
+| `cancel()` / `cancel(error)`            | Stops the flow quietly, or fails it with `error`.               |
 
-`options.signal` takes an `AbortSignal` to abort the flow. Full details are in the [API reference](https://radenkovic.github.io/flow-hooks/#/api).
+A hook is `(ctx, { signal }) => nextCtx`, sync or async. Return a new object to change the context, return nothing to keep it, and throw to fail the flow.
 
-## More examples
+## Documentation
 
-**Was the flow cancelled?**
+**[radenkovic.github.io/flow-hooks](https://radenkovic.github.io/flow-hooks/)**
 
-```ts
-const { context, cancelled } = await runFlow(
-  [
-    when(
-      (ctx) => cache.has(ctx.key),
-      [(ctx) => ({ ...ctx, value: cache.get(ctx.key) }), cancel()],
-    ),
-    computeValue,
-    storeInCache,
-  ],
-  { key },
-);
-```
+- **[Getting started](https://radenkovic.github.io/flow-hooks/#/getting-started):** learn it in nine short steps.
+- **[Examples](https://radenkovic.github.io/flow-hooks/#/examples):** complete, runnable programs: HTTP handler, webhook worker, parallel loading, retries, tests. They're in [`examples/`](./examples).
+- **[Recipes](https://radenkovic.github.io/flow-hooks/#/recipes):** retries, timeouts, fallbacks, if/else, caching, logging, Express, React.
+- **[Common mistakes](https://radenkovic.github.io/flow-hooks/#/mistakes):** the errors you're most likely to see, and the fixes.
+- **[API reference](https://radenkovic.github.io/flow-hooks/#/api)** and **[TypeScript](https://radenkovic.github.io/flow-hooks/#/typescript)**.
 
-**Reusable steps**
-
-```ts
-const requireRole = (role) => (ctx) => {
-  if (!ctx.user.roles.includes(role)) throw new ForbiddenError();
-};
-
-const authenticate = [readSession, loadUser];
-
-await flow([...authenticate, requireRole('admin'), deleteProject], { req });
-```
-
-**Retry a flaky step**
-
-```ts
-const retry =
-  (hook, attempts = 3) =>
-  async (ctx, api) => {
-    for (let attempt = 1; ; attempt++) {
-      try {
-        return await hook(ctx, api);
-      } catch (error) {
-        if (isCancelError(error) || api.signal.aborted || attempt >= attempts)
-          throw error;
-      }
-    }
-  };
-
-await flow([retry(fetchRates), convertPrices]);
-```
-
-There's more in the [Recipes](https://radenkovic.github.io/flow-hooks/#/recipes): timeouts, fallbacks, HTTP handlers, logging and UI cancellation.
-
-## TypeScript
-
-Pass your context type, and every hook in the flow is checked against it. Hooks receive an `Immutable<C>`, so mutations are compile errors, and they must return a complete context:
-
-```ts
-import { flow, type Hook } from 'flow-hooks';
-
-interface Order {
-  id: string;
-  total: number;
-  paid?: boolean;
-}
-
-const charge: Hook<Order> = async (order, { signal }) => {
-  await payments.charge(order.id, order.total, { signal });
-  return { ...order, paid: true };
-};
-
-const order = await flow<Order>([validate, charge], { id: 'o_1', total: 42 });
-//    ^? Immutable<Order>
-```
-
-See [TypeScript](https://radenkovic.github.io/flow-hooks/#/typescript) for more.
+Written in TypeScript with no runtime dependencies. Ships ESM and CommonJS, and runs in Node.js 22+ and modern browsers.
 
 ## Contributing
 
